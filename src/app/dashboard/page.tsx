@@ -1,21 +1,40 @@
-import Link from "next/link";
+"use client";
+import { useRole } from "@/components/common/useRole";
+import { useRouter } from "next/navigation";
+import { useUser } from "@auth0/nextjs-auth0";
+import RequireAuth from "@/components/common/requireAuth";
+import { useRoleContext } from "@/providers/roleProvider";
 
 export default function Dashboard() {
+  const { user } = useUser();
+  const { role } = useRoleContext();
+  // const { role, isLoading } = useRole();
+
+  // if (!user) {
+  //   return (
+  //     <div className="flex items-center justify-center min-h-screen">
+  //       <div className="text-center">
+  //         <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
+  //         <p className="text-gray-700">
+  //           You must be logged in to view this page.
+  //         </p>
+  //         <a href="/auth/login" className="text-blue-500 hover:underline">
+  //           Login
+  //         </a>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-200">
-      <div className="bg-white rounded-xl shadow-lg p-10 max-w-md w-full text-center">
-        <h1 className="text-2xl font-bold mb-4 text-blue-700">
-          Welcome to the Dashboard
-        </h1>
-        <p className="mb-6 text-gray-600">
-          Here you can manage your customers, sales, and support efficiently.
-        </p>
-        <Link href="/">
-          <button className="w-full py-2 px-4 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition">
-            Log out
-          </button>
-        </Link>
-      </div>
-    </main>
+    <RequireAuth>
+      <main className="min-h-screen">
+        <div className="  p-8 w-full h-screen">
+          <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+          <div>Your role is: {role}</div>
+          <p className="text-gray-700">Welcome back, {user?.name}!</p>
+        </div>
+      </main>
+    </RequireAuth>
   );
 }

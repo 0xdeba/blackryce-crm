@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import SidebarWrapper from "@/components/common/sidebarWrapper";
+import { RoleProvider } from "@/providers/roleProvider";
+import SidebarWrapper from "@/components/wrapper/sidebarWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,11 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CMS",
-  description: "Customer Management System",
+  title: "CRM",
+  description: "Customer Relationship Management System",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -26,9 +27,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white `}
       >
-        <SidebarWrapper>{children}</SidebarWrapper>
+        <RoleProvider>
+          <SidebarWrapper>{children}</SidebarWrapper>
+        </RoleProvider>
       </body>
     </html>
   );
