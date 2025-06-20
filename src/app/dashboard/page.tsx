@@ -1,6 +1,4 @@
 "use client";
-import { useRole } from "@/components/common/useRole";
-import { useRouter } from "next/navigation";
 import { useUser } from "@auth0/nextjs-auth0";
 import RequireAuth from "@/components/common/requireAuth";
 import { useRoleContext } from "@/providers/roleProvider";

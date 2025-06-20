@@ -2,7 +2,7 @@
 import { useUser } from "@auth0/nextjs-auth0";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FaHome, FaUser, FaSignOutAlt } from "react-icons/fa";
+import { FaHome, FaSignOutAlt } from "react-icons/fa";
 import { MdGroup } from "react-icons/md";
 
 const mainLinks = [

@@ -48,7 +48,8 @@ export async function GET() {
     });
   } catch (err: any) {
     return NextResponse.json({
-      error: "Server issue",
+      message: "Server issue",
+      error: err,
     });
   } finally {
     if (client) client.release();
