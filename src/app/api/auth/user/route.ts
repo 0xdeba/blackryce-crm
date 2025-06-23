@@ -42,29 +42,34 @@ export async function POST(req: NextRequest) {
         { message: "User registered", user: result.rows[0] },
         { status: 201 }
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Database error:", error); // Log the error for debugging
       client.release();
-      return NextResponse.json(
-        { error: "Database error", details: error.message },
-        { status: 500 }
-      );
+      let message = "Database error";
+      if (error instanceof Error) {
+        message = error.message;
+      }
+      return NextResponse.json({ error: message }, { status: 500 });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Request error:", error); // Log the error for debugging
-    return NextResponse.json(
-      { error: "Invalid or missing JSON body", details: error.message },
-      { status: 400 }
-    );
+    let message = "Invalid or missing JSON body";
+    if (error instanceof Error) {
+      message = error.message;
+    }
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const result = await pool.query("SELECT * FROM roles");
     return NextResponse.json({ roles: result.rows }, { status: 200 });
-  } catch (error: any) {
-    // Cast error to any to safely access error.message
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    let message = "Unknown error";
+    if (error instanceof Error) {
+      message = error.message;
+    }
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

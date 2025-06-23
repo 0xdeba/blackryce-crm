@@ -9,6 +9,10 @@ const pool = new Pool({
   },
 });
 
+function hasCodeProperty(error: unknown): error is { code: string } {
+  return typeof error === "object" && error !== null && "code" in error;
+}
+
 // Add a new customer
 export async function POST(req: NextRequest) {
   let client;
@@ -24,10 +28,25 @@ export async function POST(req: NextRequest) {
       message: "Customer added",
       customerID: data.rows[0].id,
     });
-  } catch (err: any) {
-    return NextResponse.json({
-      error: err,
-    });
+  } catch (err: unknown) {
+    if (hasCodeProperty(err) && err.code === "23505") {
+      return NextResponse.json(
+        {
+          error: "Email already exists",
+        },
+        { status: 409 }
+      );
+    }
+    let message = "Unknown error";
+    if (err instanceof Error) {
+      message = err.message;
+    }
+    return NextResponse.json(
+      {
+        error: message,
+      },
+      { status: 500 }
+    );
   } finally {
     if (client) {
       client.release();
@@ -36,20 +55,34 @@ export async function POST(req: NextRequest) {
 }
 
 // Get all customers
-export async function GET() {
+export async function GET(req: NextRequest) {
   let client;
+  let data;
   try {
     client = await pool.connect();
-    const data = await client.query(
-      "SELECT id, name, email, phone, address from public.customers"
-    );
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (id) {
+      data = await client.query(
+        `SELECT id, name, email, phone, address from public.customers WHERE id = $1`,
+        [id]
+      );
+    } else {
+      data = await client.query(
+        "SELECT id, name, email, phone, address from public.customers"
+      );
+    }
     return NextResponse.json({
       data: data.rows,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    let message = "Unknown error";
+    if (err instanceof Error) {
+      message = err.message;
+    }
     return NextResponse.json({
       message: "Server issue",
-      error: err,
+      error: message,
     });
   } finally {
     if (client) client.release();

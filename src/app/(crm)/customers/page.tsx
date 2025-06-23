@@ -22,6 +22,9 @@ export default function CustomersPage() {
   const role = useRoleContext();
   const [loading, setLoading] = useState(true);
   const [customers, setCustomer] = useState<Customer[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null
+  );
 
   useEffect(() => {
     async function fetchData() {
@@ -78,6 +81,12 @@ export default function CustomersPage() {
                     Loading...
                   </td>
                 </tr>
+              ) : !customers || customers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-8 text-red-500">
+                    Error fetching customer
+                  </td>
+                </tr>
               ) : (
                 customers.map((customer) => (
                   <tr
@@ -100,14 +109,26 @@ export default function CustomersPage() {
                       {customer.address}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                      <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded-lg font-medium shadow-sm transition-all">
+                      <button
+                        onClick={() => setSelectedCustomer(customer)}
+                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded-lg font-medium shadow-sm transition-all"
+                      >
                         View
                       </button>
+                      {selectedCustomer && (
+                        <ViewDetails
+                          close={() => setSelectedCustomer(null)}
+                          customer={selectedCustomer}
+                        />
+                      )}
                       {Number(role.role) === 1 && (
                         <>
-                          <button className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1 rounded-lg font-medium shadow-sm transition-all">
+                          <Link
+                            href={`customers/edit/${customer.id}`}
+                            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1 rounded-lg font-medium shadow-sm transition-all"
+                          >
                             Edit
-                          </button>
+                          </Link>
                           <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-lg font-medium shadow-sm transition-all">
                             Delete
                           </button>
@@ -122,5 +143,72 @@ export default function CustomersPage() {
         </div>
       </div>
     </RequireAuth>
+  );
+}
+
+function ViewDetails({
+  close,
+  customer,
+}: {
+  close: () => void;
+  customer: Customer;
+}) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-gray-200">
+        {/* Header */}
+        <div className="flex items-center justify-between px-8 py-5 bg-gradient-to-r from-blue-700 to-blue-500 rounded-t-2xl">
+          <div className="text-2xl font-bold text-white tracking-wide flex items-center gap-2">
+            <svg
+              className="w-7 h-7 text-blue-200"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="7" r="4" />
+              <path d="M5.5 21a7.5 7.5 0 0 1 13 0" />
+            </svg>
+            {customer.name}
+          </div>
+          <button
+            onClick={close}
+            className="text-white hover:text-blue-200 text-2xl font-bold px-2"
+            aria-label="Close"
+            title="Close"
+          >
+            ×
+          </button>
+        </div>
+        <div className="border-b border-gray-100" />
+        {/* Details */}
+        <div className="px-8 py-8 flex flex-col gap-6 bg-gray-50 rounded-b-2xl">
+          <div className="flex items-center gap-3">
+            <span className="w-20 text-xs text-gray-500 font-semibold">
+              Email
+            </span>
+            <span className="text-base text-gray-800 font-medium">
+              {customer.email}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="w-20 text-xs text-gray-500 font-semibold">
+              Phone
+            </span>
+            <span className="text-base text-gray-800 font-medium">
+              {customer.phone}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="w-20 text-xs text-gray-500 font-semibold">
+              Address
+            </span>
+            <span className="text-base text-gray-800 font-medium">
+              {customer.address}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

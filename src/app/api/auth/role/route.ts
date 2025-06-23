@@ -25,8 +25,11 @@ export async function POST(req: NextRequest) {
     } else {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-  } catch (error: any) {
-    // Cast error to any to safely access error.message
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    let message = "Unknown error";
+    if (error instanceof Error) {
+      message = error.message;
+    }
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
