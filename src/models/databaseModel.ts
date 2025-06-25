@@ -18,3 +18,14 @@ export interface Customer {
   address?: string;
   created_at?: Date;
 }
+
+export interface Lead {
+  id: number;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  status_id: number;
+  assigned_to?: number | null;
+  created_at?: Date;
+}

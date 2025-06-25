@@ -3,77 +3,98 @@ import React, { useEffect, useState } from "react";
 import RequireAuth from "@/components/common/requireAuth";
 import { useRoleContext } from "@/providers/roleProvider";
 import Link from "next/link";
-import { Customer } from "@/models/databaseModel";
 import EntityTable, {
   EntityTableColumn,
 } from "@/components/crm_comp/EntityTable";
+import { Lead } from "@/models/databaseModel";
 
-export default function CustomersPage() {
+const statusMap: Record<number, string> = {
+  1: "new",
+  2: "contacted",
+  3: "converted",
+  4: "lost",
+};
+
+const userMap: Record<number, string> = {
+  1: "Alice Smith",
+  2: "Bob Johnson",
+};
+
+const columns: EntityTableColumn<Lead>[] = [
+  { key: "name", label: "Name" },
+  { key: "email", label: "Email" },
+  { key: "phone", label: "Phone" },
+  { key: "address", label: "Address" },
+  {
+    key: "status_id",
+    label: "Status",
+    render: (row) => statusMap[row.status_id] || row.status_id,
+  },
+  {
+    key: "assigned_to",
+    label: "Assigned To",
+    render: (row) => userMap[row.assigned_to ?? 0] || row.assigned_to,
+  },
+];
+
+export default function LeadsPage() {
   const role = useRoleContext();
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(true);
-  const [customers, setCustomer] = useState<Customer[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    null
-  );
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const res = await fetch("/api/customer");
+      const res = await fetch("/api/lead");
       const data = await res.json();
-      setCustomer(data.data);
+      setLeads(data.data);
       setLoading(false);
     }
     fetchData();
   }, []);
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this customer?")) return;
-    const res = await fetch("/api/customer", {
+    if (!confirm("Are you sure you want to delete this lead?")) return;
+    const res = await fetch("/api/lead", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
     if (res.ok) {
-      setCustomer((prev) => prev.filter((c) => c.id !== id));
+      setLeads((prev) => prev.filter((l) => l.id !== id));
     } else {
       const data = await res.json();
-      alert(data.error || "Failed to delete customer. Please try again.");
+      alert(data.error || "Failed to delete lead. Please try again.");
     }
   };
 
-  const columns: EntityTableColumn<Customer>[] = [
-    { key: "name", label: "Name" },
-    { key: "email", label: "Email" },
-    { key: "phone", label: "Phone" },
-    { key: "address", label: "Address" },
-  ];
   return (
     <RequireAuth>
       <div className="p-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center">
-            Customers
+            Leads
           </h1>
           {Number(role.role) === 1 && (
             <Link
-              href="/customers/add"
+              href="/leads/add"
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg shadow transition-all duration-150"
             >
-              + Add Customer
+              + Add Lead
             </Link>
           )}
         </div>
         <EntityTable
-          data={customers}
+          data={leads}
           loading={loading}
           columns={columns}
           role={{ role: Number(role.role) || 0 }}
-          selectedRow={selectedCustomer}
-          setSelectedRow={setSelectedCustomer}
+          selectedRow={selectedLead}
+          setSelectedRow={setSelectedLead}
           handleDelete={handleDelete}
-          editHref={(row) => `customers/edit/${row.id}`}
-          entityLabel="customer"
+          editHref={(row) => `leads/edit/${row.id}`}
+          entityLabel="lead"
         />
       </div>
     </RequireAuth>

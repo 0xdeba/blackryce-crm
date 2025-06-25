@@ -3,11 +3,12 @@ import { useUser } from "@auth0/nextjs-auth0";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FaHome, FaSignOutAlt } from "react-icons/fa";
-import { MdGroup } from "react-icons/md";
+import { MdGroup, MdPersonAdd } from "react-icons/md";
 
 const mainLinks = [
   { href: "/dashboard", icon: FaHome, label: "Dashboard" },
   { href: "/customers", icon: MdGroup, label: "Customers" },
+  { href: "/leads", icon: MdPersonAdd, label: "Leads" },
 ];
 
 export default function Sidebar() {
