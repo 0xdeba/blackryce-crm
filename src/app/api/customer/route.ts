@@ -88,3 +88,88 @@ export async function GET(req: NextRequest) {
     if (client) client.release();
   }
 }
+
+// Update Customer by id
+export async function PUT(req: NextRequest) {
+  let client;
+  try {
+    client = await pool.connect();
+    const { id, name, email, phone, address } = await req.json();
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Customer id is required" },
+        { status: 400 }
+      );
+    }
+
+    const result = await client.query(
+      `UPDATE public.customers
+       SET name = $1, email = $2, phone = $3, address = $4
+       WHERE id = $5
+       RETURNING id`,
+      [name, email, phone, address, id]
+    );
+
+    if (result.rowCount === 0) {
+      return NextResponse.json(
+        { error: "Customer not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      message: "Customer updated",
+      customerID: result.rows[0].id,
+    });
+  } catch (err: unknown) {
+    let message = "Unknown error";
+    if (err instanceof Error) {
+      message = err.message;
+    }
+    return NextResponse.json({ error: message }, { status: 500 });
+  } finally {
+    if (client) client.release();
+  }
+}
+
+// Delete by ID
+export async function DELETE(req: NextRequest) {
+  let client;
+  try {
+    client = await pool.connect();
+    const { id } = await req.json();
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Customer id is required" },
+        { status: 400 }
+      );
+    }
+
+    const result = await client.query(
+      "DELETE FROM public.customers WHERE id = $1 RETURNING id",
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return NextResponse.json(
+        { error: "Customer not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      message: "Customer deleted",
+      customerID: result.rows[0].id,
+    });
+  } catch (err: unknown) {
+    let message = "Unknown error";
+    if (err instanceof Error) {
+      message = err.message;
+    }
+    return NextResponse.json({ error: message }, { status: 500 });
+  } finally {
+    if (client) client.release();
+  }
+}

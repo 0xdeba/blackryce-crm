@@ -40,7 +40,6 @@ export default function Form({
         address: newData.address,
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, initialData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,7 +70,7 @@ export default function Form({
         res = await fetch(`/api/customer`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({ ...formData, id: initialData.id }),
         });
       } else {
         res = await fetch(`/api/customer`, {

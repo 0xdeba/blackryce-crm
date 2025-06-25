@@ -22,7 +22,7 @@ export default function AddCustomerPage() {
         <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
           Edit Customer {id}
         </h1>
-        <Form edit={true} submitLabel="Edit Customer" initialData={customer} />
+        <Form edit={true} submitLabel="Save" initialData={customer} />
       </div>
     </div>
   );

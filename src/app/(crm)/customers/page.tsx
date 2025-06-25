@@ -37,6 +37,21 @@ export default function CustomersPage() {
     fetchData();
   }, []);
 
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this customer?")) return;
+    const res = await fetch("/api/customer", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (res.ok) {
+      setCustomer((prev) => prev.filter((c) => c.id !== id));
+    } else {
+      const data = await res.json();
+      alert(data.error || "Failed to delete customer. Please try again.");
+    }
+  };
+
   return (
     <RequireAuth>
       <div className="p-8">
@@ -129,7 +144,10 @@ export default function CustomersPage() {
                           >
                             Edit
                           </Link>
-                          <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-lg font-medium shadow-sm transition-all">
+                          <button
+                            onClick={() => handleDelete(customer.id)}
+                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-lg font-medium shadow-sm transition-all"
+                          >
                             Delete
                           </button>
                         </>
