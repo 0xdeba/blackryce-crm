@@ -155,7 +155,11 @@ function EntityViewDetails<T extends { name: string }>({
         <div className="border-b border-gray-100" />
         <div className="px-8 py-8 flex flex-col gap-6 bg-gray-50 rounded-b-2xl">
           {Object.entries(row).map(([key, value]) =>
-            key !== "id" && key !== "name" && value !== undefined ? (
+            key !== "id" &&
+            key !== "name" &&
+            key !== "status_id" &&
+            key !== "assigned_to" &&
+            value !== undefined ? (
               <div className="flex items-center gap-3" key={key}>
                 <span className="w-28 text-xs text-gray-500 font-semibold">
                   {key

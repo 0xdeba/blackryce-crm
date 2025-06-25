@@ -5,6 +5,7 @@ import Image from "next/image";
 export default function Header() {
   const { user } = useUser();
   const { role } = useRoleContext();
+  console.log(user?.name);
   return (
     <header className="w-full bg-gradient-to-r from-blue-50 to-blue-100/80 backdrop-blur-md border-b border-blue-200 px-4 md:px-8 py-4 mb- shadow-lg sticky top-0 z-30">
       <div className="flex items-center max-w-7xl mx-auto w-full">

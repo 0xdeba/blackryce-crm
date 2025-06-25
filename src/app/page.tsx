@@ -5,12 +5,13 @@ export default async function Home() {
   const session = await auth0.getSession();
   if (session) {
     // Insert user in DB
-    await fetch("/api/auth/user", {
+    await fetch("https://blackryce-crm.vercel.app/api/auth/user", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        name: session.user.name,
         email: session.user.email,
         sub: session.user.sub,
       }),
@@ -21,7 +22,7 @@ export default async function Home() {
       redirect(`/dashboard`);
     }
 
-    console.log(session);
+    // console.log(session);
   }
   return (
     <main

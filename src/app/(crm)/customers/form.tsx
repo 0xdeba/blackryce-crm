@@ -6,41 +6,34 @@ import { Customer } from "@/models/databaseModel";
 
 export default function Form({
   edit = false,
-  initialData = { id: 0, name: "", email: "", phone: "", address: "" },
   submitLabel = "Add Customer",
   data,
 }: {
   edit?: boolean;
-  initialData?: Customer;
   submitLabel?: string;
   data?: Customer;
 }) {
-  const [formData, setFormData] = useState<Omit<Customer, "id">>(
-    data || initialData
-  );
+  const [formData, setFormData] = useState<Omit<Customer, "id">>({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
   const [error, setErrorState] = useState("");
   const [success, setSuccessState] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    // Only update if data/initialData is defined and different from formData
-    const newData = data || initialData;
-    if (
-      newData &&
-      (formData.name !== newData.name ||
-        formData.email !== newData.email ||
-        formData.phone !== newData.phone ||
-        formData.address !== newData.address)
-    ) {
+    if (edit && data) {
       setFormData({
-        name: newData.name,
-        email: newData.email,
-        phone: newData.phone,
-        address: newData.address,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
       });
     }
-  }, [data, initialData]);
+  }, [edit, data]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -70,7 +63,7 @@ export default function Form({
         res = await fetch(`/api/customer`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...formData, id: initialData.id }),
+          body: JSON.stringify({ ...formData, id: data?.id }),
         });
       } else {
         res = await fetch(`/api/customer`, {

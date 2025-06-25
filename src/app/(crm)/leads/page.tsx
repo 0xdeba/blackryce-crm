@@ -8,45 +8,30 @@ import EntityTable, {
 } from "@/components/crm_comp/EntityTable";
 import { Lead } from "@/models/databaseModel";
 
-const statusMap: Record<number, string> = {
-  1: "new",
-  2: "contacted",
-  3: "converted",
-  4: "lost",
-};
+interface LeadWithNames extends Lead {
+  status_name: string;
+  assigned_to_name: string;
+}
 
-const userMap: Record<number, string> = {
-  1: "Alice Smith",
-  2: "Bob Johnson",
-};
-
-const columns: EntityTableColumn<Lead>[] = [
+const columns: EntityTableColumn<LeadWithNames>[] = [
   { key: "name", label: "Name" },
   { key: "email", label: "Email" },
   { key: "phone", label: "Phone" },
   { key: "address", label: "Address" },
-  {
-    key: "status_id",
-    label: "Status",
-    render: (row) => statusMap[row.status_id] || row.status_id,
-  },
-  {
-    key: "assigned_to",
-    label: "Assigned To",
-    render: (row) => userMap[row.assigned_to ?? 0] || row.assigned_to,
-  },
+  { key: "status_name", label: "Status" },
+  { key: "assigned_to_name", label: "Assigned To" },
 ];
 
 export default function LeadsPage() {
   const role = useRoleContext();
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [leads, setLeads] = useState<LeadWithNames[]>([]);
+  const [selectedLead, setSelectedLead] = useState<LeadWithNames | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const res = await fetch("/api/lead");
+      const res = await fetch("/api/lead/getdata");
       const data = await res.json();
       setLeads(data.data);
       setLoading(false);

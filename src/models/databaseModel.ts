@@ -5,6 +5,7 @@ export interface Role {
 
 export interface User {
   id: number;
+  name: string;
   email: string;
   auth0_sub: string;
   role_id: number;

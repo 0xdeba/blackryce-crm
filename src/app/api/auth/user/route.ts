@@ -12,8 +12,7 @@ export async function POST(req: NextRequest) {
   try {
     // Parse the JSON body from the request
     const body = await req.json();
-    const email = body.email;
-    const sub = body.sub;
+    const { name, email, sub } = body;
 
     // Connect to the database
     const client = await pool.connect();
@@ -34,8 +33,8 @@ export async function POST(req: NextRequest) {
 
       // Insert new user
       const result = await client.query(
-        "INSERT INTO public.users (email, auth0_sub) VALUES ($1, $2) RETURNING *",
-        [email, sub]
+        "INSERT INTO public.users (name, email, auth0_sub) VALUES ($1, $2, $3) RETURNING *",
+        [name, email, sub]
       );
       client.release();
       return NextResponse.json(
@@ -63,7 +62,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET() {
   try {
-    const result = await pool.query("SELECT * FROM roles");
+    const result = await pool.query("SELECT * FROM users");
     return NextResponse.json({ roles: result.rows }, { status: 200 });
   } catch (error: unknown) {
     let message = "Unknown error";
