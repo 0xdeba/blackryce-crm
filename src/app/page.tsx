@@ -5,7 +5,7 @@ export default async function Home() {
   const session = await auth0.getSession();
   if (session) {
     // Insert user in DB
-    await fetch("https://blackryce-crm.vercel.app/api/auth/user", {
+    await fetch("/api/auth/user", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

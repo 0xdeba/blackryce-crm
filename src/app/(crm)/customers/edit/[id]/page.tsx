@@ -3,6 +3,7 @@ import { useParams } from "next/navigation";
 import Form from "../../form";
 import { useEffect, useState } from "react";
 import { Customer } from "@/models/databaseModel";
+import RequireAuth from "@/components/common/requireAuth";
 
 export default function AddCustomerPage() {
   const { id } = useParams();
@@ -17,13 +18,15 @@ export default function AddCustomerPage() {
   }, []);
   // console.log(customer);
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
-          Edit Customer {id}
-        </h1>
-        <Form edit={true} submitLabel="Save" data={customer} />
+    <RequireAuth>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
+          <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
+            Edit Customer {id}
+          </h1>
+          <Form edit={true} submitLabel="Save" data={customer} />
+        </div>
       </div>
-    </div>
+    </RequireAuth>
   );
 }

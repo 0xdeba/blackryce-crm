@@ -2,8 +2,9 @@
 import { useUser } from "@auth0/nextjs-auth0";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FaHome, FaSignOutAlt } from "react-icons/fa";
+import { FaHome, FaSignOutAlt, FaUsers } from "react-icons/fa";
 import { MdGroup, MdPersonAdd } from "react-icons/md";
+import { useRoleContext } from "@/providers/roleProvider";
 
 const mainLinks = [
   { href: "/dashboard", icon: FaHome, label: "Dashboard" },
@@ -13,6 +14,7 @@ const mainLinks = [
 
 export default function Sidebar() {
   const user = useUser();
+  const { role } = useRoleContext();
   const currentPath = usePathname();
   if (!user) {
     return null;
@@ -51,6 +53,30 @@ export default function Sidebar() {
                   </li>
                 </Link>
               ))}
+              {/* Show Staff link only for Admin (role 1) */}
+              {Number(role) === 1 && (
+                <Link href="/staff">
+                  <li
+                    className={`relative p-3 mb-2 flex items-center gap-4 rounded-lg cursor-pointer transition-all duration-200 text-white group hover:bg-gray-800/80 ${
+                      currentPath === "/staff"
+                        ? "bg-gray-800/80 font-bold shadow-md"
+                        : ""
+                    }`}
+                  >
+                    {currentPath === "/staff" && (
+                      <span className="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-blue-300" />
+                    )}
+                    <FaUsers
+                      className={`h-6 w-6 ${
+                        currentPath === "/staff"
+                          ? "text-white"
+                          : "text-blue-300 group-hover:text-white"
+                      } transition-colors`}
+                    />
+                    <span className="text-base">Staff</span>
+                  </li>
+                </Link>
+              )}
             </ul>
           </nav>
         </div>

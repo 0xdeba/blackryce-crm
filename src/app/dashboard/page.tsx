@@ -1,127 +1,233 @@
 "use client";
 import RequireAuth from "@/components/common/requireAuth";
 import Header from "@/components/dashboard/Header";
+import { useEffect, useState } from "react";
+import { useRoleContext } from "@/providers/roleProvider";
+import { Lead, Customer } from "@/models/databaseModel";
+import Link from "next/link";
 
-const summaryStats = [
-  { label: "New Leads", value: 12, color: "bg-blue-100 text-blue-700" },
-  { label: "Contacted", value: 7, color: "bg-yellow-100 text-yellow-700" },
-  { label: "Converted", value: 5, color: "bg-green-100 text-green-700" },
-  { label: "Lost", value: 3, color: "bg-red-100 text-red-700" },
-];
-
-const topCustomers = [
-  "Acme Corp",
-  "Globex Inc.",
-  "Soylent Corp.",
-  "Initech",
-  "Umbrella Corp.",
-];
-
-const activityLogs = [
-  {
-    type: "Call",
-    lead: "John Doe",
-    user: "Alice Smith",
-    time: "Today 10:15 AM",
-  },
-  {
-    type: "Meeting",
-    lead: "Jane Smith",
-    user: "Bob Johnson",
-    time: "Today 9:00 AM",
-  },
-  {
-    type: "Email",
-    lead: "Michael Brown",
-    user: "Alice Smith",
-    time: "Yesterday",
-  },
-  {
-    type: "Call",
-    lead: "Sarah Lee",
-    user: "Bob Johnson",
-    time: "Yesterday",
-  },
-  {
-    type: "Meeting",
-    lead: "Tom Clark",
-    user: "Alice Smith",
-    time: "2 days ago",
-  },
-];
+interface DashboardStats {
+  totalLeads: number;
+  totalCustomers: number;
+  totalUsers: number;
+  conversionRate: number;
+}
 
 export default function Dashboard() {
+  const { role } = useRoleContext();
+  const [stats, setStats] = useState<DashboardStats>({
+    totalLeads: 0,
+    totalCustomers: 0,
+    totalUsers: 0,
+    conversionRate: 0,
+  });
+  const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
+  const [recentCustomers, setRecentCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch leads, customers, and users in parallel
+        const [leadsResponse, customersResponse, usersResponse] =
+          await Promise.all([
+            fetch("/api/lead/getdata"),
+            fetch("/api/customer"),
+            fetch("/api/auth/user"),
+          ]);
+
+        if (leadsResponse.ok && customersResponse.ok) {
+          const leadsData = await leadsResponse.json();
+          const customersData = await customersResponse.json();
+          const leads = leadsData.data || [];
+          const customers = customersData.data || [];
+
+          // Calculate stats
+          const totalLeads = leads.length;
+          const totalCustomers = customers.length;
+          const conversionRate =
+            totalLeads > 0
+              ? Math.round((totalCustomers / totalLeads) * 100)
+              : 0;
+
+          let totalUsers = 0;
+          if (usersResponse.ok) {
+            const usersData = await usersResponse.json();
+            totalUsers = (usersData.roles || []).length;
+          }
+
+          setStats({
+            totalLeads,
+            totalCustomers,
+            totalUsers,
+            conversionRate,
+          });
+
+          // Set recent data (last 5 items)
+          setRecentLeads(leads.slice(-5).reverse());
+          setRecentCustomers(customers.slice(-5).reverse());
+        } else {
+          setError("Failed to fetch dashboard data");
+        }
+      } catch (err) {
+        setError("Error loading dashboard data");
+        console.error("Dashboard error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <RequireAuth>
+        <main className="min-h-screen bg-gray-50">
+          <Header />
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+          </div>
+        </main>
+      </RequireAuth>
+    );
+  }
   return (
     <RequireAuth>
       <main className="min-h-screen bg-gray-50">
         <Header />
         <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600">{error}</p>
+            </div>
+          )}
+
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {summaryStats.map((stat) => (
-              <div
-                key={stat.label}
-                className={`rounded-xl shadow-sm p-6 flex flex-col items-center ${stat.color}`}
-              >
-                <div className="text-3xl font-bold mb-2">{stat.value}</div>
-                <div className="text-lg font-medium">{stat.label}</div>
+            <div className="rounded-xl shadow-sm p-6 flex flex-col items-center bg-blue-100 text-blue-700">
+              <div className="text-3xl font-bold mb-2">{stats.totalLeads}</div>
+              <div className="text-lg font-medium">Total Leads</div>
+            </div>
+
+            <div className="rounded-xl shadow-sm p-6 flex flex-col items-center bg-green-100 text-green-700">
+              <div className="text-3xl font-bold mb-2">
+                {stats.totalCustomers}
               </div>
-            ))}
+              <div className="text-lg font-medium">Customers</div>
+            </div>
+
+            {Number(role) === 1 && (
+              <div className="rounded-xl shadow-sm p-6 flex flex-col items-center bg-purple-100 text-purple-700">
+                <div className="text-3xl font-bold mb-2">
+                  {stats.totalUsers}
+                </div>
+                <div className="text-lg font-medium">Team Members</div>
+              </div>
+            )}
+
+            <div className="rounded-xl shadow-sm p-6 flex flex-col items-center bg-yellow-100 text-yellow-700">
+              <div className="text-3xl font-bold mb-2">
+                {stats.conversionRate}%
+              </div>
+              <div className="text-lg font-medium">Conversion Rate</div>
+            </div>
           </div>
 
           {/* Middle Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            {/* Conversion Rate */}
-            <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col items-center justify-center">
-              <div className="text-2xl font-bold text-green-600 mb-2">35%</div>
-              <div className="text-gray-700 font-medium">Conversion Rate</div>
-            </div>
-            {/* Top Customers */}
+            {/* Recent Leads */}
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="text-lg font-semibold mb-3">Top 5 Customers</div>
-              <ul className="space-y-2">
-                {topCustomers.map((name) => (
-                  <li key={name} className="text-gray-800 flex items-center">
-                    <span className="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
-                    {name}
-                  </li>
-                ))}
-              </ul>
+              <div className="text-lg font-semibold mb-3">Recent Leads</div>
+              {recentLeads.length > 0 ? (
+                <ul className="space-y-2">
+                  {recentLeads.map((lead) => (
+                    <li
+                      key={lead.id}
+                      className="text-gray-800 flex items-center justify-between"
+                    >
+                      <div className="flex items-center">
+                        <span className="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
+                        <span className="font-medium">{lead.name}</span>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {lead.created_at
+                          ? new Date(lead.created_at).toLocaleDateString()
+                          : "No date"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500 text-sm">No leads yet</p>
+              )}
+            </div>
+
+            {/* Recent Customers */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="text-lg font-semibold mb-3">Recent Customers</div>
+              {recentCustomers.length > 0 ? (
+                <ul className="space-y-2">
+                  {recentCustomers.map((customer) => (
+                    <li
+                      key={customer.id}
+                      className="text-gray-800 flex items-center justify-between"
+                    >
+                      <div className="flex items-center">
+                        <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                        <span className="font-medium">{customer.name}</span>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {customer.created_at
+                          ? new Date(customer.created_at).toLocaleDateString()
+                          : "No date"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500 text-sm">No customers yet</p>
+              )}
             </div>
           </div>
 
-          {/* Activity Logs */}
+          {/* Quick Actions */}
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="text-lg font-semibold mb-3">Recent Activity</div>
-            <ul className="divide-y divide-gray-200">
-              {activityLogs.map((log, idx) => (
-                <li
-                  key={idx}
-                  className="py-3 flex flex-col md:flex-row md:items-center md:justify-between"
+            <div className="text-lg font-semibold mb-4">Quick Actions</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <Link
+                href="/leads/add"
+                className="flex items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+              >
+                <span className="text-blue-600 font-medium">
+                  + Add New Lead
+                </span>
+              </Link>
+
+              <Link
+                href="/customers/add"
+                className="flex items-center justify-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+              >
+                <span className="text-green-600 font-medium">
+                  + Add Customer
+                </span>
+              </Link>
+
+              {Number(role) === 1 && (
+                <Link
+                  href="/staff"
+                  className="flex items-center justify-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
                 >
-                  <div className="flex items-center space-x-3">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        log.type === "Call"
-                          ? "bg-blue-100 text-blue-700"
-                          : log.type === "Meeting"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-green-100 text-green-700"
-                      }`}
-                    >
-                      {log.type}
-                    </span>
-                    <span className="font-medium text-gray-900">
-                      {log.lead}
-                    </span>
-                    <span className="text-gray-500">by {log.user}</span>
-                  </div>
-                  <div className="text-gray-400 text-sm mt-1 md:mt-0 md:text-right">
-                    {log.time}
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  <span className="text-purple-600 font-medium">
+                    Manage Staff
+                  </span>
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </main>

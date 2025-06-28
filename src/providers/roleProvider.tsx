@@ -31,10 +31,18 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       })
         .then((res) => res.json())
         .then((data) => {
-          setRole(data.role);
+          // If there's an error or no role, set role to null
+          if (data.error || !data.role) {
+            setRole(null);
+          } else {
+            setRole(data.role);
+          }
           setIsLoading(false);
         })
-        .catch(() => setIsLoading(false));
+        .catch(() => {
+          setRole(null);
+          setIsLoading(false);
+        });
     }
   }, [user, userLoading]);
 

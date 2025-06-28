@@ -18,10 +18,16 @@ export async function POST(req: NextRequest) {
       [email]
     );
     if (result.rows.length > 0) {
-      return NextResponse.json(
-        { role: result.rows[0].role_id },
-        { status: 200 }
-      );
+      const roleId = result.rows[0].role_id;
+      if (roleId) {
+        return NextResponse.json({ role: roleId }, { status: 200 });
+      } else {
+        // User exists but has no role assigned
+        return NextResponse.json(
+          { error: "No role assigned" },
+          { status: 403 }
+        );
+      }
     } else {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }

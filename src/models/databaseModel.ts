@@ -8,7 +8,7 @@ export interface User {
   name: string;
   email: string;
   auth0_sub: string;
-  role_id: number;
+  role_id: number | null;
 }
 
 export interface Customer {

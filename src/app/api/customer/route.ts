@@ -64,12 +64,12 @@ export async function GET(req: NextRequest) {
     const id = searchParams.get("id");
     if (id) {
       data = await client.query(
-        `SELECT id, name, email, phone, address from public.customers WHERE id = $1`,
+        `SELECT id, name, email, phone, address, created_at from public.customers WHERE id = $1`,
         [id]
       );
     } else {
       data = await client.query(
-        "SELECT id, name, email, phone, address from public.customers"
+        "SELECT id, name, email, phone, address, created_at from public.customers"
       );
     }
     return NextResponse.json({

@@ -1,6 +1,7 @@
 import { useUser } from "@auth0/nextjs-auth0";
 import { useRoleContext } from "@/providers/roleProvider";
 import Image from "next/image";
+import RoleBadge from "./RoleBadge";
 
 export default function Header() {
   const { user } = useUser();
@@ -20,18 +21,7 @@ export default function Header() {
         <div className="flex-1" />
         {user && (
           <div className="relative group flex items-center space-x-2 cursor-pointer flex-shrink-0">
-            {/* Role badge - modern, soft, friendly */}
-            {(Number(role) === 1 || Number(role) === 2) && (
-              <span
-                className={`mr-2 px-3 py-1 rounded-full text-sm font-medium shadow border transition-colors duration-200 ${
-                  Number(role) === 1
-                    ? "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300"
-                    : "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300"
-                }`}
-              >
-                {Number(role) === 1 ? "Admin" : "Sales"}
-              </span>
-            )}
+            <RoleBadge role={role} />
             {user.picture ? (
               <Image
                 src={user.picture}

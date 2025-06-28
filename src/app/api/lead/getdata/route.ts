@@ -14,7 +14,8 @@ export async function GET() {
       const result = await client.query(`
         SELECT l.id, l.name, l.email, l.phone, l.address,
                l.status_id, s.name AS status_name,
-               l.assigned_to, u.name AS assigned_to_name
+               l.assigned_to, u.name AS assigned_to_name,
+               l.created_at
         FROM leads l
         LEFT JOIN lead_statuses s ON l.status_id = s.id
         LEFT JOIN users u ON l.assigned_to = u.id
