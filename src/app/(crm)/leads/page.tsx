@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import RequireAuth from "@/components/common/requireAuth";
 import { useRoleContext } from "@/providers/roleProvider";
+import { useUser } from "@auth0/nextjs-auth0";
 import Link from "next/link";
 import EntityTable, {
   EntityTableColumn,
@@ -23,21 +24,25 @@ const columns: EntityTableColumn<LeadWithNames>[] = [
 ];
 
 export default function LeadsPage() {
-  const role = useRoleContext();
+  const { role } = useRoleContext();
+  const { user } = useUser();
   const [leads, setLeads] = useState<LeadWithNames[]>([]);
   const [selectedLead, setSelectedLead] = useState<LeadWithNames | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
+      if (!user?.email) return;
+
       setLoading(true);
-      const res = await fetch("/api/lead/getdata");
+      const url = `/api/lead/getdata?email=${encodeURIComponent(user.email)}`;
+      const res = await fetch(url);
       const data = await res.json();
       setLeads(data.data);
       setLoading(false);
     }
     fetchData();
-  }, []);
+  }, [user?.email]);
 
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this lead?")) return;
@@ -54,6 +59,22 @@ export default function LeadsPage() {
     }
   };
 
+  // Permission functions for role-based access
+  const canEditLead = () => {
+    const userRole = Number(role);
+    if (userRole === 1) return true; // Admin can edit all leads
+    if (userRole === 2) {
+      // Sales user can edit assigned leads
+      return true;
+    }
+    return false;
+  };
+
+  const canDeleteLead = () => {
+    // Only admin can delete leads
+    return Number(role) === 1;
+  };
+
   return (
     <RequireAuth>
       <div className="p-8">
@@ -61,7 +82,7 @@ export default function LeadsPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center">
             Leads
           </h1>
-          {Number(role.role) === 1 && (
+          {Number(role) === 1 && (
             <Link
               href="/leads/add"
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg shadow transition-all duration-150"
@@ -74,12 +95,14 @@ export default function LeadsPage() {
           data={leads}
           loading={loading}
           columns={columns}
-          role={{ role: Number(role.role) || 0 }}
+          role={{ role: Number(role) || 0 }}
           selectedRow={selectedLead}
           setSelectedRow={setSelectedLead}
           handleDelete={handleDelete}
           editHref={(row) => `leads/edit/${row.id}`}
           entityLabel="lead"
+          canEdit={canEditLead}
+          canDelete={canDeleteLead}
         />
       </div>
     </RequireAuth>

@@ -1,7 +1,50 @@
+"use client";
 import Form from "../form";
 import RequireAuth from "@/components/common/requireAuth";
+import { useRoleContext } from "@/providers/roleProvider";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function AddCustomerPage() {
+  const { role } = useRoleContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Only admin (role 1) can add customers
+    if (role !== undefined && Number(role) !== 1) {
+      router.push("/customers");
+    }
+  }, [role, router]);
+
+  // Show loading while checking role
+  if (role === undefined) {
+    return (
+      <RequireAuth>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+        </div>
+      </RequireAuth>
+    );
+  }
+
+  // Show access denied if not admin
+  if (Number(role) !== 1) {
+    return (
+      <RequireAuth>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">
+              Access Denied
+            </h1>
+            <p className="text-gray-600">
+              You do not have permission to add customers.
+            </p>
+          </div>
+        </div>
+      </RequireAuth>
+    );
+  }
+
   return (
     <RequireAuth>
       <div className="flex items-center justify-center min-h-screen bg-gray-50">

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Lead } from "@/models/databaseModel";
+import { useRoleContext } from "@/providers/roleProvider";
 
 export interface LeadFormData {
   name: string;
@@ -22,6 +23,7 @@ export default function LeadForm({
   edit?: boolean;
   data?: Lead;
 }) {
+  const { role } = useRoleContext();
   const [formData, setFormData] = useState<LeadFormData>({
     name: data?.name || "",
     email: data?.email || "",
@@ -35,6 +37,9 @@ export default function LeadForm({
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<{ id: number; name: string }[]>([]);
   const router = useRouter();
+
+  // Check if current user is admin
+  const isAdmin = Number(role) === 1;
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -50,13 +55,17 @@ export default function LeadForm({
     setError("");
     setSuccess("");
     setLoading(true);
+
+    // For sales users editing leads, assigned_to is not required (will use existing value)
+    const requireAssignedTo = isAdmin || !edit;
+
     if (
       !formData.name ||
       !formData.email ||
       !formData.phone ||
       !formData.address ||
       !formData.status_id ||
-      !formData.assigned_to
+      (requireAssignedTo && !formData.assigned_to)
     ) {
       setError("All fields are required.");
       setLoading(false);
@@ -65,6 +74,11 @@ export default function LeadForm({
     try {
       let res;
       if (edit && data?.id) {
+        // For sales users editing leads, preserve the original assigned_to value
+        const assignedToValue = isAdmin
+          ? Number(formData.assigned_to)
+          : data.assigned_to;
+
         res = await fetch("/api/lead", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -72,7 +86,7 @@ export default function LeadForm({
             id: data.id,
             ...formData,
             status_id: Number(formData.status_id),
-            assigned_to: Number(formData.assigned_to),
+            assigned_to: assignedToValue,
           }),
         });
       } else {
@@ -232,29 +246,47 @@ export default function LeadForm({
           <option value="4">lost</option>
         </select>
       </div>
-      <div>
-        <label
-          className="block text-sm font-medium text-gray-700 mb-1"
-          htmlFor="assigned_to"
-        >
-          Assigned To (User ID)<span className="text-red-500">*</span>
-        </label>
-        <select
-          id="assigned_to"
-          name="assigned_to"
-          value={formData.assigned_to}
-          onChange={handleChange}
-          required
-          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">Select user</option>
-          {users.map((user) => (
-            <option key={user.id} value={user.id}>
-              {user.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* Only show assigned_to field for admins or when creating new leads */}
+      {(isAdmin || !edit) && (
+        <div>
+          <label
+            className="block text-sm font-medium text-gray-700 mb-1"
+            htmlFor="assigned_to"
+          >
+            Assigned To (User ID)<span className="text-red-500">*</span>
+          </label>
+          <select
+            id="assigned_to"
+            name="assigned_to"
+            value={formData.assigned_to}
+            onChange={handleChange}
+            required={isAdmin || !edit}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select user</option>
+            {users.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+      {/* Show read-only assigned info for sales users editing leads */}
+      {!isAdmin && edit && data?.assigned_to && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Assigned To
+          </label>
+          <div className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 text-gray-600">
+            {users.find((user) => user.id === data.assigned_to)?.name ||
+              `User ID: ${data.assigned_to}`}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Only administrators can change lead assignments
+          </p>
+        </div>
+      )}
       {error && <div className="text-red-500 text-sm text-center">{error}</div>}
       {success && (
         <div className="text-green-600 text-sm text-center">{success}</div>
