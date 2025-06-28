@@ -9,7 +9,7 @@ import EntityTable, {
 } from "@/components/crm_comp/EntityTable";
 
 export default function CustomersPage() {
-  const role = useRoleContext();
+  const { role } = useRoleContext();
   const [loading, setLoading] = useState(true);
   const [customers, setCustomer] = useState<Customer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
@@ -55,7 +55,7 @@ export default function CustomersPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center">
             Customers
           </h1>
-          {Number(role.role) === 1 && (
+          {Number(role) === 1 && (
             <Link
               href="/customers/add"
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg shadow transition-all duration-150"
@@ -68,7 +68,7 @@ export default function CustomersPage() {
           data={customers}
           loading={loading}
           columns={columns}
-          role={{ role: Number(role.role) || 0 }}
+          role={{ role: Number(role) || 0 }}
           selectedRow={selectedCustomer}
           setSelectedRow={setSelectedCustomer}
           handleDelete={handleDelete}

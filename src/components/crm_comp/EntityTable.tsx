@@ -17,6 +17,8 @@ interface EntityTableProps<T> {
   handleDelete: (id: number) => void;
   editHref: (row: T) => string;
   entityLabel: string;
+  canEdit?: (row: T) => boolean;
+  canDelete?: (row: T) => boolean;
 }
 
 export default function EntityTable<T extends { id: number; name: string }>({
@@ -29,6 +31,8 @@ export default function EntityTable<T extends { id: number; name: string }>({
   handleDelete,
   editHref,
   entityLabel,
+  canEdit = () => Number(role.role) === 1,
+  canDelete = () => Number(role.role) === 1,
 }: EntityTableProps<T>) {
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -93,21 +97,21 @@ export default function EntityTable<T extends { id: number; name: string }>({
                       close={() => setSelectedRow(null)}
                     />
                   )}
-                  {Number(role.role) === 1 && (
-                    <>
-                      <Link
-                        href={editHref(row)}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1 rounded-lg font-medium shadow-sm transition-all"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(row.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-lg font-medium shadow-sm transition-all"
-                      >
-                        Delete
-                      </button>
-                    </>
+                  {canEdit(row) && (
+                    <Link
+                      href={editHref(row)}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1 rounded-lg font-medium shadow-sm transition-all"
+                    >
+                      Edit
+                    </Link>
+                  )}
+                  {canDelete(row) && (
+                    <button
+                      onClick={() => handleDelete(row.id)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-lg font-medium shadow-sm transition-all"
+                    >
+                      Delete
+                    </button>
                   )}
                 </td>
               </tr>

@@ -3,6 +3,7 @@ import RequireAuth from "@/components/common/requireAuth";
 import Header from "@/components/dashboard/Header";
 import { useEffect, useState } from "react";
 import { useRoleContext } from "@/providers/roleProvider";
+import { useUser } from "@auth0/nextjs-auth0";
 import { Lead, Customer } from "@/models/databaseModel";
 import Link from "next/link";
 
@@ -15,6 +16,7 @@ interface DashboardStats {
 
 export default function Dashboard() {
   const { role } = useRoleContext();
+  const { user } = useUser();
   const [stats, setStats] = useState<DashboardStats>({
     totalLeads: 0,
     totalCustomers: 0,
@@ -29,13 +31,18 @@ export default function Dashboard() {
   // Fetch dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
+      if (!user?.email) return;
+
       try {
         setLoading(true);
 
         // Fetch leads, customers, and users in parallel
+        const leadsUrl = `/api/lead/getdata?email=${encodeURIComponent(
+          user.email
+        )}`;
         const [leadsResponse, customersResponse, usersResponse] =
           await Promise.all([
-            fetch("/api/lead/getdata"),
+            fetch(leadsUrl),
             fetch("/api/customer"),
             fetch("/api/auth/user"),
           ]);
@@ -82,7 +89,7 @@ export default function Dashboard() {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [user?.email]);
 
   if (loading) {
     return (
@@ -199,23 +206,27 @@ export default function Dashboard() {
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="text-lg font-semibold mb-4">Quick Actions</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              <Link
-                href="/leads/add"
-                className="flex items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-              >
-                <span className="text-blue-600 font-medium">
-                  + Add New Lead
-                </span>
-              </Link>
+              {Number(role) === 1 && (
+                <Link
+                  href="/leads/add"
+                  className="flex items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                >
+                  <span className="text-blue-600 font-medium">
+                    + Add New Lead
+                  </span>
+                </Link>
+              )}
 
-              <Link
-                href="/customers/add"
-                className="flex items-center justify-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
-              >
-                <span className="text-green-600 font-medium">
-                  + Add Customer
-                </span>
-              </Link>
+              {Number(role) === 1 && (
+                <Link
+                  href="/customers/add"
+                  className="flex items-center justify-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                >
+                  <span className="text-green-600 font-medium">
+                    + Add Customer
+                  </span>
+                </Link>
+              )}
 
               {Number(role) === 1 && (
                 <Link
