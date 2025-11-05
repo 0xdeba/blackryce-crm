@@ -35,7 +35,8 @@ export default function EntityTable<T extends { id: number; name: string }>({
   canDelete = () => Number(role.role) === 1,
 }: EntityTableProps<T>) {
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+    // allow horizontal scroll when table exceeds container width
+    <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
